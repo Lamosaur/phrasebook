@@ -1,32 +1,60 @@
 // app/phrases/[category].tsx
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { Link, useLocalSearchParams } from 'expo-router'; // useLocalSearchParams gets the URL parameter
-import { PHRASES } from '../../data/mockData'; // Adjust path if needed
+import { FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Link, useLocalSearchParams } from 'expo-router';
+import { PHRASES } from '../../data/mockData';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PhraseListScreen() {
-  const { category } = useLocalSearchParams(); // Gets the category name from the URL
+  const { category } = useLocalSearchParams();
   const phrases = PHRASES.filter(p => p.category === category);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={phrases}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <Link href={`/detail/${item.id}`} asChild>
-            <TouchableOpacity style={styles.item}>
-              <Text style={styles.title}>{item.polish_phrase}</Text>
+            <TouchableOpacity style={styles.resultItem}>
+              <Text style={styles.resultTitle}>{item.polish_phrase}</Text>
+              <Text style={styles.resultSubtitle}>{item.vietnamese_phrase}</Text>
             </TouchableOpacity>
           </Link>
         )}
+        contentContainerStyle={{ paddingTop: 10 }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
-  item: { backgroundColor: '#aed6f1', padding: 20, marginVertical: 8, borderRadius: 5 },
-  title: { fontSize: 18 },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  resultItem: {
+    backgroundColor: '#fff',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginHorizontal: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+    // Shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    // Elevation for Android
+    elevation: 2,
+  },
+  resultTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  resultSubtitle: {
+    fontSize: 16,
+    color: 'gray',
+    marginTop: 4,
+  },
 });
