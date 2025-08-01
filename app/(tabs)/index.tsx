@@ -1,75 +1,141 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// app/(tabs)/index.tsx
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link } from 'expo-router';
+import { CATEGORIES, PHRASES } from '../../data/mockData';
+import { useDebounce } from '../../hooks/useDebounce';
+import { FontAwesome } from '@expo/vector-icons';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+type Phrase = {
+  id: number;
+  category: string;
+  polish_phrase: string;
+  vietnamese_phrase: string;
+  phonetic_guide: string;
+  audio_filename: string;
+};
 
-export default function HomeScreen() {
+export default function CategoriesScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredPhrases, setFilteredPhrases] = useState<Phrase[]>([]);
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  useEffect(() => {
+    if (debouncedSearchQuery) {
+      const lowercasedQuery = debouncedSearchQuery.toLowerCase();
+      const results = PHRASES.filter(phrase =>
+        phrase.polish_phrase.toLowerCase().includes(lowercasedQuery) ||
+        phrase.vietnamese_phrase.toLowerCase().includes(lowercasedQuery)
+      );
+      setFilteredPhrases(results);
+    } else {
+      setFilteredPhrases([]);
+    }
+  }, [debouncedSearchQuery]);
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    // SafeAreaView will now work correctly because the StatusBar is visible
+    <SafeAreaView style={styles.container}>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search Polish or Vietnamese..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {searchQuery.length > 0 && (
+          <Pressable onPress={handleClearSearch} style={styles.clearIcon}>
+            <FontAwesome name="times-circle" size={24} color="#888" />
+          </Pressable>
+        )}
+      </View>
+
+      {searchQuery.length > 0 ? (
+        <FlatList
+          data={filteredPhrases}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <Link href={`/detail/${item.id}`} asChild>
+              <TouchableOpacity style={styles.resultItem}>
+                <Text style={styles.resultTitle}>{item.polish_phrase}</Text>
+                <Text style={styles.resultSubtitle}>{item.vietnamese_phrase}</Text>
+              </TouchableOpacity>
+            </Link>
+          )}
+          ListEmptyComponent={<Text style={styles.noResultsText}>No phrases found.</Text>}
+        />
+      ) : (
+        <FlatList
+          data={CATEGORIES}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => (
+            <Link href={`/phrases/${item}`} asChild>
+              <TouchableOpacity style={styles.categoryItem}>
+                <Text style={styles.categoryTitle}>{item}</Text>
+              </TouchableOpacity>
+            </Link>
+          )}
+        />
+      )}
+    </SafeAreaView>
   );
 }
 
+// These styles are the same as before, but will now render correctly.
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    marginHorizontal: 10,
+    marginTop: 10, // Added a little top margin for spacing
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  searchBar: {
+    flex: 1,
+    height: 50,
+    borderColor: '#DDDDDD',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingRight: 40,
+    fontSize: 16,
+    backgroundColor: '#f5f5f5',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  clearIcon: {
     position: 'absolute',
+    right: 15,
+    height: '100%',
+    justifyContent: 'center',
+  },
+  categoryItem: {
+    backgroundColor: '#f9c2ff',
+    padding: 20,
+    marginVertical: 8,
+    marginHorizontal: 10,
+    borderRadius: 5,
+  },
+  categoryTitle: { fontSize: 24 },
+  resultItem: {
+    backgroundColor: '#f5f5f5',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  resultTitle: { fontSize: 18, fontWeight: '500' },
+  resultSubtitle: { fontSize: 16, color: 'gray', marginTop: 4 },
+  noResultsText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 18,
+    color: 'gray',
   },
 });

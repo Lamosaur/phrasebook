@@ -1,29 +1,35 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+// app/_layout.tsx
 import { Stack } from 'expo-router';
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { SafeAreaProvider } from 'react-native-safe-area-context'; // <-- Import SafeAreaProvider
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <SafeAreaProvider>
+      {/* 
+        This is the key fix. It tells the OS to manage the status bar.
+        'auto' will automatically set the text color (light/dark) based on the system theme.
+      */}
+      <StatusBar style="dark" translucent={false} />
+
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+        <Stack.Screen
+          name="phrases/[category]"
+          options={({ route }) => ({
+            title: route.params.category,
+            headerBackTitleVisible: false,
+          })}
+        />
+        <Stack.Screen
+          name="detail/[phraseId]"
+          options={{
+            title: 'Phrase Detail',
+            headerBackTitleVisible: false,
+          }}
+        />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
