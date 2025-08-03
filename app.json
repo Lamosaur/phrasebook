@@ -39,7 +39,15 @@
       "typedRoutes": true
     },
     "androidStatusBar": {
-      "translucent": false
-    }
+      "translucent": false,
+      "backgroundColor": "#ffffff"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "98351f82-32be-4fc9-b799-6ee26eea9169"
+      }
+    },
+    "owner": "lamosaur12"
   }
 }
