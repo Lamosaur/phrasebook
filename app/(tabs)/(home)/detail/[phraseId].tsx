@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { PHRASES } from '../../data/mockData'; // Adjust path
+import { PHRASES } from '../../../../data/mockData';
 
 export default function PhraseDetailScreen() {
   const { phraseId } = useLocalSearchParams();
