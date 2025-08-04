@@ -6,8 +6,27 @@ export default function HomeStackLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="phrases/[category]" options={({ route }) => ({ title: route.params?.category as string })} />
-      <Stack.Screen name="detail/[phraseId]" options={{ title: 'Phrase Detail' }} />
+      <Stack.Screen
+        name="subcategories/[categoryId]"
+        options={({ route }) => {
+          // Safely cast and access the route parameters
+          const params = route.params as { categoryName?: string };
+          return {
+            title: params?.categoryName ?? 'Subcategories',
+          };
+        }}
+      />
+      <Stack.Screen
+        name="phrases/[subcategoryId]"
+        options={({ route }) => {
+          // Safely cast and access the route parameters
+          const params = route.params as { subcategoryName?: string };
+          return {
+            title: params?.subcategoryName ?? 'Phrases',
+          };
+        }}
+      />
+      <Stack.Screen name="detail/[phraseId]" options={{ title: 'Cụm Từ Hiển Thị' }} />
     </Stack>
   );
 }

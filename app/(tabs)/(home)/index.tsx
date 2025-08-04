@@ -1,60 +1,112 @@
-// app/(tabs)/index.tsx
+// app/(tabs)/(home)/index.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, Pressable } from 'react-native';
+import { View, Text, SectionList, TouchableOpacity, StyleSheet, TextInput, Pressable, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
-import { CATEGORIES, PHRASES } from '../../../data/mockData';
+import { useRouter } from 'expo-router';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { FontAwesome } from '@expo/vector-icons';
-import { Phrase } from '../../../types'; // Import the central type
+import { Phrase, Category, Subcategory } from '../../../types';
+import { getCategories, searchPhrases, searchSubcategories } from '../../../services/database';
+import PhraseCard from '../../../components/PhraseCard';
+import { useFavorites } from '../../../context/FavoritesContext';
+import { useSearch } from '../../../context/SearchContext';
 
 export default function CategoriesScreen() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const { searchQuery, setSearchQuery } = useSearch(); // Use context instead of local state
   const [filteredPhrases, setFilteredPhrases] = useState<Phrase[]>([]);
+  const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const router = useRouter();
 
+  // Load initial categories
   useEffect(() => {
-    if (debouncedSearchQuery) {
-      const lowercasedQuery = debouncedSearchQuery.toLowerCase();
-      const results = PHRASES.filter(phrase =>
-        phrase.polish_phrase.toLowerCase().includes(lowercasedQuery) ||
-        phrase.vietnamese_phrase.toLowerCase().includes(lowercasedQuery)
-      );
-      setFilteredPhrases(results);
-    } else {
-      setFilteredPhrases([]);
-    }
+    const loadData = async () => {
+      const data = await getCategories();
+      setCategories(data);
+    };
+    loadData();
+  }, []);
+
+  // Handle search logic for both phrases and subcategories
+  useEffect(() => {
+    const performSearch = async () => {
+      if (debouncedSearchQuery) {
+        const [phraseResults, subcategoryResults] = await Promise.all([
+          searchPhrases(debouncedSearchQuery),
+          searchSubcategories(debouncedSearchQuery),
+        ]);
+        setFilteredPhrases(phraseResults);
+        setFilteredSubcategories(subcategoryResults);
+      } else {
+        setFilteredPhrases([]);
+        setFilteredSubcategories([]);
+      }
+    };
+    performSearch();
   }, [debouncedSearchQuery]);
+
+  const handleCategoryPress = (item: Category) => {
+    setSearchQuery(''); // Clear search on navigation
+    router.push({
+      pathname: '/subcategories/[categoryId]',
+      params: { categoryId: String(item.id), categoryName: item.name },
+    });
+  };
+
+  const handleSubcategoryPress = (item: Subcategory) => {
+    setSearchQuery(''); // Clear search on navigation
+    router.push({
+      pathname: '/phrases/[subcategoryId]',
+      params: { subcategoryId: String(item.id), subcategoryName: item.name },
+    });
+  };
+
+  const renderSearchResultItem = ({ item }: { item: Phrase | Subcategory }) => {
+    // Type guard to check if the item is a Phrase
+    if ('polish_phrase' in item) {
+      return (
+        <PhraseCard
+          phrase={item}
+          isFavorite={isFavorite(item.id)}
+          onToggleFavorite={() => toggleFavorite(item.id)}
+        />
+      );
+    }
+    // Otherwise, it's a Subcategory
+    return (
+      <TouchableOpacity style={styles.resultItem} onPress={() => handleSubcategoryPress(item)}>
+        <Text style={styles.resultTitle}>{item.name}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderSectionHeader = ({ section: { title } }: { section: { title: string } }) => (
+    <Text style={styles.sectionHeader}>{title}</Text>
+  );
+
+  const searchResultsSections = [];
+  if (filteredSubcategories.length > 0) {
+    searchResultsSections.push({ title: 'Category', data: filteredSubcategories });
+  }
+  if (filteredPhrases.length > 0) {
+    searchResultsSections.push({ title: 'Phrases', data: filteredPhrases });
+  }
 
   const handleClearSearch = () => {
     setSearchQuery('');
   };
 
-  const renderSearchResultItem = ({ item }: { item: Phrase }) => (
-    <Link href={`/detail/${item.id}`} asChild>
-      <TouchableOpacity style={styles.resultItem}>
-        <Text style={styles.resultTitle}>{item.polish_phrase}</Text>
-        <Text style={styles.resultSubtitle}>{item.vietnamese_phrase}</Text>
-      </TouchableOpacity>
-    </Link>
-  );
-
-  const renderCategoryCard = ({ item }: { item: string }) => (
-    <Link href={`/phrases/${item}`} asChild>
-      <TouchableOpacity style={styles.categoryCard}>
-        <Text style={styles.categoryCardTitle}>{item}</Text>
-      </TouchableOpacity>
-    </Link>
-  );
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.searchContainer}>
+        {/* Search bar remains the same */}
         <View style={styles.searchWrapper}>
           <FontAwesome name="search" size={20} color="#888" style={styles.searchIcon} />
           <TextInput
             style={styles.searchBar}
-            placeholder="Search Polish or Vietnamese..."
+            placeholder="Search categories or phrases..."
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholderTextColor="#888"
@@ -68,21 +120,30 @@ export default function CategoriesScreen() {
       </View>
 
       {searchQuery.length > 0 ? (
-        <FlatList
-          // --- THE FIX: A unique key for the search list ---
-          key="search-results-list"
-          data={filteredPhrases}
-          keyExtractor={(item) => item.id.toString()}
+        <SectionList
+          sections={searchResultsSections}
+          keyExtractor={(item) => {
+            // Prepend a type to the key to guarantee uniqueness across sections
+            if ('polish_phrase' in item) {
+              return `phrase-${item.id}`;
+            }
+            return `subcategory-${item.id}`;
+          }}
           renderItem={renderSearchResultItem}
-          ListEmptyComponent={<Text style={styles.noResultsText}>No phrases found.</Text>}
+          renderSectionHeader={renderSectionHeader}
+          ListEmptyComponent={<Text style={styles.noResultsText}>No results found.</Text>}
+          contentContainerStyle={{ paddingHorizontal: 10 }}
         />
       ) : (
         <FlatList
-          // --- THE FIX: A DIFFERENT unique key for the category grid ---
           key="category-grid"
-          data={CATEGORIES}
-          keyExtractor={(item) => item}
-          renderItem={renderCategoryCard}
+          data={categories}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.categoryCard} onPress={() => handleCategoryPress(item)}>
+              <Text style={styles.categoryText}>{item.name}</Text>
+            </TouchableOpacity>
+          )}
           numColumns={2}
           contentContainerStyle={styles.categoryGridContainer}
         />
@@ -91,7 +152,7 @@ export default function CategoriesScreen() {
   );
 }
 
-// Styles remain the same
+// Styles remain the same, with additions
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -122,25 +183,34 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   resultItem: {
-    backgroundColor: '#f9f9f9',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    marginHorizontal: 10,
+    backgroundColor: '#fff',
+    padding: 20,
+    marginVertical: 8,
     borderRadius: 10,
-    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
   },
   resultTitle: { fontSize: 18, fontWeight: '500' },
-  resultSubtitle: { fontSize: 16, color: 'gray', marginTop: 4 },
   noResultsText: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 18,
     color: 'gray',
+  },
+  sectionHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#666',
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 6,
+    paddingHorizontal: 15,
+    marginTop: 10,
+    marginBottom: 5,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
   },
   categoryGridContainer: {
     paddingHorizontal: 5,
@@ -161,7 +231,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  categoryCardTitle: {
+  categoryText: {
     fontSize: 18,
     fontWeight: '600',
     color: '#0d47a1',

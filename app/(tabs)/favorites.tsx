@@ -1,18 +1,29 @@
 // app/favorites.tsx
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Text, StyleSheet, FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFavorites } from '../../context/FavoritesContext';
-import { PHRASES } from '../../data/mockData';
 import PhraseCard from '../../components/PhraseCard';
+import { getPhrasesByIds } from '../../services/database';
+import { Phrase } from '../../types';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function FavoritesScreen() {
   const { favorites, isFavorite, toggleFavorite } = useFavorites();
+  const [favoritePhrases, setFavoritePhrases] = useState<Phrase[]>([]);
+  const isFocused = useIsFocused();
 
-  const favoritePhrases = useMemo(
-    () => PHRASES.filter((p) => favorites.includes(p.id)),
-    [favorites]
-  );
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (isFocused && favorites.length > 0) {
+        const phrases = await getPhrasesByIds(favorites);
+        setFavoritePhrases(phrases);
+      } else {
+        setFavoritePhrases([]);
+      }
+    };
+    loadFavorites();
+  }, [favorites, isFocused]);
 
   return (
     <SafeAreaView style={styles.container}>
