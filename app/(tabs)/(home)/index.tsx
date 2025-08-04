@@ -6,15 +6,7 @@ import { Link } from 'expo-router';
 import { CATEGORIES, PHRASES } from '../../../data/mockData';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { FontAwesome } from '@expo/vector-icons';
-
-type Phrase = {
-  id: number;
-  category: string;
-  polish_phrase: string;
-  vietnamese_phrase: string;
-  phonetic_guide: string;
-  audio_filename: string;
-};
+import { Phrase } from '../../../types'; // Import the central type
 
 export default function CategoriesScreen() {
   const [searchQuery, setSearchQuery] = useState('');

@@ -3,8 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface FavoritesContextType {
   favorites: number[];
-  addFavorite: (id: number) => void;
-  removeFavorite: (id: number) => void;
+  toggleFavorite: (id: number) => void; // New function
   isFavorite: (id: number) => boolean;
 }
 
@@ -39,6 +38,14 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const toggleFavorite = (id: number) => {
+    if (favorites.includes(id)) {
+      removeFavorite(id);
+    } else {
+      addFavorite(id);
+    }
+  };
+
   const addFavorite = (id: number) => {
     const newFavorites = [...favorites, id];
     saveFavorites(newFavorites);
@@ -54,7 +61,7 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <FavoritesContext.Provider value={{ favorites, addFavorite, removeFavorite, isFavorite }}>
+    <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite }}>
       {children}
     </FavoritesContext.Provider>
   );

@@ -6,7 +6,7 @@ export default function HomeStackLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="phrases/[category]" options={({ route }) => ({ title: route.params.category as string })} />
+      <Stack.Screen name="phrases/[category]" options={({ route }) => ({ title: route.params?.category as string })} />
       <Stack.Screen name="detail/[phraseId]" options={{ title: 'Phrase Detail' }} />
     </Stack>
   );
