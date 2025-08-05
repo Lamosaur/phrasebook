@@ -8,21 +8,19 @@ import { SearchProvider } from '../context/SearchContext';
 
 export default function RootLayout() {
   return (
-    <FavoritesProvider>
-      <SearchProvider>
-        <SafeAreaProvider>
-          {/* 
-            This is the key fix. It tells the OS to manage the status bar.
-            'auto' will automatically set the text color (light/dark) based on the system theme.
-          */}
-          <StatusBar style="dark" translucent={false} />
+    // SafeAreaProvider needs to be the outermost provider to work correctly.
+    <SafeAreaProvider>
+      <FavoritesProvider>
+        <SearchProvider>
+          {/* 'auto' style is generally more flexible. */}
+          <StatusBar style="auto" />
 
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
           </Stack>
-        </SafeAreaProvider>
-      </SearchProvider>
-    </FavoritesProvider>
+        </SearchProvider>
+      </FavoritesProvider>
+    </SafeAreaProvider>
   );
 }

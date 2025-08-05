@@ -26,7 +26,7 @@ export default function FavoritesScreen() {
   }, [favorites, isFocused]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <FlatList
         data={favoritePhrases}
         keyExtractor={(item) => item.id.toString()}
@@ -37,7 +37,10 @@ export default function FavoritesScreen() {
             onToggleFavorite={() => toggleFavorite(item.id)}
           />
         )}
-        contentContainerStyle={{ paddingTop: 10 }}
+        // Add paddingBottom to create space at the end of the list
+        // and reduce paddingTop for better alignment with the standard header.
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 80 }}
+        
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>Your favorite phrases will appear here.</Text>
@@ -51,13 +54,13 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff', 
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 20,
   },
   emptyText: {
     fontSize: 18,

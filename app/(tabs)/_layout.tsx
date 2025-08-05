@@ -22,6 +22,8 @@ export default function TabLayout() {
         options={{
           title: 'Yêu Thích', // This sets the header title
           headerShown: true,   // This ensures the header is visible
+          // Add this line to make the header float over the screen content
+          headerTransparent: true,
           tabBarIcon: ({ color }) => <FontAwesome size={28} name="heart" color={color} />,
         }}
       />
