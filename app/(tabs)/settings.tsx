@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SettingsScreen() {
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-      {/* You can add your settings options here */}
+    <View style={styles.container}>
+      <View style={styles.settingItem}>
+        <Text style={styles.settingText}>Language</Text>
+        <Text style={styles.settingValue}>English</Text>
+      </View>
       <View style={styles.settingItem}>
         <Text style={styles.settingText}>App Version</Text>
         <Text style={styles.settingValue}>1.0.0</Text>
@@ -15,7 +16,7 @@ export default function SettingsScreen() {
         <Text style={styles.settingText}>Dark Mode</Text>
         <Text style={styles.settingValue}>Coming Soon</Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -23,6 +24,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingTop: 20,
   },
   title: {
     fontSize: 24,
