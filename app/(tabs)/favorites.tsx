@@ -1,5 +1,5 @@
 // app/favorites.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, StyleSheet, FlatList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFavorites } from '../../context/FavoritesContext';
@@ -38,7 +38,6 @@ export default function FavoritesScreen() {
           />
         )}
         contentContainerStyle={{ paddingTop: 10 }}
-        ListHeaderComponent={<Text style={styles.header}>Yêu Thích</Text>}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>Your favorite phrases will appear here.</Text>
@@ -53,13 +52,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    paddingTop: 10,
   },
   emptyContainer: {
     flex: 1,
