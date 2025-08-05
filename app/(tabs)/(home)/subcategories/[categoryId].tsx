@@ -41,14 +41,12 @@ export default function SubcategoryListScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        data={subcategories}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderSubcategoryCard}
-        contentContainerStyle={styles.gridContainer}
-      />
-    </SafeAreaView>
+    <FlatList
+      data={subcategories}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={renderSubcategoryCard}
+      contentContainerStyle={styles.gridContainer}
+    />
   );
 }
 

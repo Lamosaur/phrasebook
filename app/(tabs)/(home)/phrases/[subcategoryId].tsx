@@ -49,14 +49,12 @@ export default function PhraseListScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        data={phrases}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderPhraseCard}
-        contentContainerStyle={{ paddingTop: 10 }}
-      />
-    </SafeAreaView>
+    <FlatList
+      data={phrases}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={renderPhraseCard}
+      contentContainerStyle={{ paddingTop: 10 }}
+    />
   );
 }
 
